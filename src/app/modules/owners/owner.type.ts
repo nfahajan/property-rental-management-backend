@@ -14,13 +14,7 @@ export interface IOwner extends Document {
     zipCode: string;
     country: string;
   };
-  businessInfo?: {
-    businessName?: string;
-    businessType?: string;
-    taxId?: string;
-    licenseNumber?: string;
-  };
-  status: "active" | "inactive" | "pending" | "suspended";
+  profileImage?:string;
   user: any; // Reference to User model
   createdAt: Date;
   updatedAt: Date;
@@ -40,12 +34,7 @@ export interface ICreateOwner {
     zipCode: string;
     country: string;
   };
-  businessInfo?: {
-    businessName?: string;
-    businessType?: string;
-    taxId?: string;
-    licenseNumber?: string;
-  };
+  profileImage?:string;
   password: string; // For creating user account
 }
 
@@ -61,11 +50,5 @@ export interface IUpdateOwner {
     zipCode?: string;
     country?: string;
   };
-  businessInfo?: {
-    businessName?: string;
-    businessType?: string;
-    taxId?: string;
-    licenseNumber?: string;
-  };
-  status?: "active" | "inactive" | "pending" | "suspended";
+  profileImage?:string;
 }

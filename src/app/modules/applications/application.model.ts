@@ -35,7 +35,6 @@ const applicationSchema = new Schema<IApplication, ApplicationModel>(
         type: Number,
         required: [true, "Monthly income is required"],
         min: [0, "Monthly income cannot be negative"],
-        max: [1000000, "Monthly income cannot exceed 1,000,000"],
       },
       employmentStatus: {
         type: String,
@@ -50,51 +49,10 @@ const applicationSchema = new Schema<IApplication, ApplicationModel>(
         type: String,
         trim: true,
       },
-      emergencyContact: {
-        name: {
-          type: String,
-          required: [true, "Emergency contact name is required"],
-          trim: true,
-        },
-        phone: {
-          type: String,
-          required: [true, "Emergency contact phone is required"],
-          trim: true,
-        },
-        relationship: {
-          type: String,
-          required: [true, "Emergency contact relationship is required"],
-          trim: true,
-        },
-      },
       additionalInfo: {
         type: String,
         trim: true,
         maxlength: [1000, "Additional info cannot exceed 1000 characters"],
-      },
-    },
-    documents: {
-      idProof: {
-        type: String,
-        trim: true,
-      },
-      incomeProof: {
-        type: String,
-        trim: true,
-      },
-      bankStatement: {
-        type: String,
-        trim: true,
-      },
-      references: {
-        type: [String],
-        default: [],
-        validate: {
-          validator: function (references: string[]) {
-            return references.length <= 5; // Limit to 5 reference documents
-          },
-          message: "Cannot have more than 5 reference documents",
-        },
       },
     },
     status: {

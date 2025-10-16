@@ -6,6 +6,7 @@ import sendResponse from "../../shared/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import NotFoundError from "../../errors/not-found";
 import BadRequestError from "../../errors/bad-request";
+import { FileUploadHelper } from "../../shared/cloudinaryHelper";
 
 export class OwnerController {
   // Create a new owner and associated user
@@ -145,8 +146,60 @@ export class OwnerController {
       const { id } = req.params;
       const updateData: IUpdateOwner = req.body;
 
+      // Handle profile image upload if file is provided
+      if (req.file) {
+        try {
+          // Get current owner to check for existing profile image
+          let currentOwner;
+          if (id) {
+            currentOwner = await Owner.findById(id);
+          } else {
+            currentOwner = await Owner.findOne({ user: req.user?._id });
+          }
+
+          // Delete old profile image from Cloudinary if exists
+          if (currentOwner?.profileImage) {
+            try {
+              await FileUploadHelper.deleteFromCloudinary(
+                currentOwner.profileImage
+              );
+            } catch (deleteError) {
+              console.error("Failed to delete old profile image:", deleteError);
+              // Continue with upload even if deletion fails
+            }
+          }
+
+          // Upload new profile image
+          const imageUrl = await FileUploadHelper.uploadToCloudinary(
+            req.file,
+            "profile-images"
+          );
+          if (imageUrl) {
+            updateData.profileImage = imageUrl;
+          }
+        } catch (error) {
+          sendResponse(res, {
+            success: false,
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            message: "Failed to upload profile image",
+            data: null,
+          });
+          return;
+        }
+      }
+
+      // If no ID in params, get owner by authenticated user ID (for profile update)
+      let ownerId = id;
+      if (!id) {
+        const owner = await Owner.findOne({ user: req.user?._id });
+        if (!owner) {
+          throw new NotFoundError("Owner profile not found");
+        }
+        ownerId = owner._id;
+      }
+
       const owner = await Owner.findByIdAndUpdate(
-        id,
+        ownerId,
         { ...updateData },
         { new: true, runValidators: true }
       ).populate("user", "email roles status");

@@ -35,7 +35,7 @@ const userSchema = new Schema<IUser, UserModel>(
 
     roles: {
       type: [String],
-      default: ["client"],
+      default: ["tenant"],
     },
     permissions: {
       type: [String],

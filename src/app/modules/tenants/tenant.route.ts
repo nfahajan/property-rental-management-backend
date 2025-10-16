@@ -2,35 +2,34 @@ import { TenantController } from "./tenant.controller";
 import auth from "../../middlewares/authentication";
 import hasRole from "../../middlewares/has-role";
 import expressPromiseRouter from "express-promise-router";
+import { FileUploadHelper } from "../../shared/cloudinaryHelper";
 
 const router = expressPromiseRouter();
 
-// Public routes (if needed)
-// router.post("/", TenantController.createTenant); // Uncomment if tenants can self-register
+// Public routes - self-registration
+router.post("/register", TenantController.createTenant);
 
 // Protected routes - require authentication
 router.get("/profile", auth, TenantController.getTenantByUserId);
-router.put("/profile", auth, TenantController.updateTenant);
 
-// Admin/Staff routes - require authentication and appropriate roles
-router.post(
-  "/",
+// Support both PUT and PATCH for profile updates (backward compatibility)
+router.put(
+  "/profile",
   auth,
-  hasRole("admin", "staff"),
-  TenantController.createTenant
+  FileUploadHelper.upload.single("profileImage"),
+  TenantController.updateTenant
 );
-router.get(
-  "/",
+router.patch(
+  "/profile",
   auth,
-  hasRole("admin", "staff"),
-  TenantController.getAllTenants
+  FileUploadHelper.upload.single("profileImage"),
+  TenantController.updateTenant
 );
-router.get(
-  "/:id",
-  auth,
-  hasRole("admin", "staff"),
-  TenantController.getTenantById
-);
+
+// Admin routes - require authentication and appropriate roles
+router.post("/", auth, hasRole("admin"), TenantController.createTenant);
+router.get("/", auth, hasRole("admin"), TenantController.getAllTenants);
+router.get("/:id", auth, hasRole("admin"), TenantController.getTenantById);
 router.put(
   "/:id",
   auth,

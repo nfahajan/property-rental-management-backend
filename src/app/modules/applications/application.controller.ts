@@ -53,32 +53,11 @@ export class ApplicationController {
           "You already have a pending or approved application for this apartment"
         );
       }
-
-      // Handle uploaded documents
-      const documents: any = {};
-      if (req.files) {
-        const files = req.files as any[];
-        files.forEach((file) => {
-          const fieldName = file.fieldname;
-          if (fieldName === "idProof") {
-            documents.idProof = file.filename;
-          } else if (fieldName === "incomeProof") {
-            documents.incomeProof = file.filename;
-          } else if (fieldName === "bankStatement") {
-            documents.bankStatement = file.filename;
-          } else if (fieldName === "references") {
-            if (!documents.references) documents.references = [];
-            documents.references.push(file.filename);
-          }
-        });
-      }
-
       // Create application
       const application = new Application({
         tenant: tenant._id,
         apartment: applicationData.apartmentId,
         applicationDetails: applicationData.applicationDetails,
-        documents,
       });
 
       await application.save();
@@ -186,9 +165,22 @@ export class ApplicationController {
       }
 
       // Check access permissions
-      const isTenant = application.tenant.user.toString() === userId.toString();
+      const isTenant =
+        application.tenant?.user?.toString() === userId.toString();
+
+      // Populate owner if not already populated
+      if (!application.apartment.owner || !application.apartment.owner.user) {
+        await application.populate({
+          path: "apartment",
+          populate: {
+            path: "owner",
+            select: "user",
+          },
+        });
+      }
+
       const isOwner =
-        application.apartment.owner.user.toString() === userId.toString();
+        application.apartment?.owner?.user?.toString() === userId.toString();
       const isAdmin =
         req.user?.roles?.includes("admin") ||
         req.user?.roles?.includes("staff");
@@ -238,36 +230,6 @@ export class ApplicationController {
         throw new BadRequestError("You can only update pending applications");
       }
 
-      // Handle new uploaded documents
-      if (req.files) {
-        const files = req.files as any[];
-        files.forEach((file) => {
-          const fieldName = file.fieldname;
-          if (fieldName === "idProof") {
-            updateData.documents = {
-              ...updateData.documents,
-              idProof: file.filename,
-            };
-          } else if (fieldName === "incomeProof") {
-            updateData.documents = {
-              ...updateData.documents,
-              incomeProof: file.filename,
-            };
-          } else if (fieldName === "bankStatement") {
-            updateData.documents = {
-              ...updateData.documents,
-              bankStatement: file.filename,
-            };
-          } else if (fieldName === "references") {
-            const currentRefs = application.documents.references || [];
-            updateData.documents = {
-              ...updateData.documents,
-              references: [...currentRefs, file.filename],
-            };
-          }
-        });
-      }
-
       const updatedApplication = await Application.findByIdAndUpdate(
         id,
         { ...updateData },
@@ -301,7 +263,13 @@ export class ApplicationController {
       const userId = req.user?._id;
 
       const application = await Application.findById(id)
-        .populate("apartment")
+        .populate({
+          path: "apartment",
+          populate: {
+            path: "owner",
+            select: "user",
+          },
+        })
         .populate("tenant");
 
       if (!application) {
@@ -310,7 +278,7 @@ export class ApplicationController {
 
       // Check permissions
       const isOwner =
-        application.apartment.owner.user.toString() === userId.toString();
+        application.apartment?.owner?.user?.toString() === userId.toString();
       const isAdmin =
         req.user?.roles?.includes("admin") ||
         req.user?.roles?.includes("staff");

@@ -15,12 +15,7 @@ export interface ITenant extends Document {
     country: string;
   };
   dateOfBirth: Date;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-  status: "active" | "inactive" | "pending";
+  profileImage?:string;
   user: any; // Reference to User model
   createdAt: Date;
   updatedAt: Date;
@@ -41,11 +36,7 @@ export interface ICreateTenant {
     country: string;
   };
   dateOfBirth: Date;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  profileImage?:string;
   password: string; // For creating user account
 }
 
@@ -62,10 +53,5 @@ export interface IUpdateTenant {
     country?: string;
   };
   dateOfBirth?: Date;
-  emergencyContact?: {
-    name?: string;
-    phone?: string;
-    relationship?: string;
-  };
-  status?: "active" | "inactive" | "pending";
+  profileImage?:string;
 }

@@ -6,6 +6,7 @@ import sendResponse from "../../shared/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import NotFoundError from "../../errors/not-found";
 import ForbiddenError from "../../errors/forbidden";
+import { FileUploadHelper } from "../../shared/cloudinaryHelper";
 
 export class ApartmentController {
   // Create a new apartment
@@ -20,10 +21,20 @@ export class ApartmentController {
         throw new ForbiddenError("Only property owners can create apartments");
       }
 
-      // Handle uploaded images
+      // Handle uploaded images - Upload to Cloudinary
       const images: string[] = [];
       if (req.files && Array.isArray(req.files)) {
-        images.push(...req.files.map((file: any) => file.filename));
+        try {
+          // Upload all images to Cloudinary
+          const uploadPromises = req.files.map((file: Express.Multer.File) =>
+            FileUploadHelper.uploadToCloudinary(file, "apartments")
+          );
+          const uploadedUrls = await Promise.all(uploadPromises);
+          images.push(...uploadedUrls);
+        } catch (uploadError) {
+          console.error("Failed to upload images to Cloudinary:", uploadError);
+          throw new Error("Failed to upload apartment images");
+        }
       }
 
       // Create apartment
@@ -208,10 +219,21 @@ export class ApartmentController {
         throw new ForbiddenError("You can only update your own apartments");
       }
 
-      // Handle new uploaded images
-      if (req.files && Array.isArray(req.files)) {
-        const newImages = req.files.map((file: any) => file.filename);
-        updateData.images = [...(apartment.images || []), ...newImages];
+      // Handle new uploaded images - Upload to Cloudinary
+      if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+        try {
+          // Upload all new images to Cloudinary
+          const uploadPromises = req.files.map((file: Express.Multer.File) =>
+            FileUploadHelper.uploadToCloudinary(file, "apartments")
+          );
+          const uploadedUrls = await Promise.all(uploadPromises);
+
+          // Append new images to existing ones
+          updateData.images = [...(apartment.images || []), ...uploadedUrls];
+        } catch (uploadError) {
+          console.error("Failed to upload images to Cloudinary:", uploadError);
+          throw new Error("Failed to upload apartment images");
+        }
       }
 
       const updatedApartment = await Apartment.findByIdAndUpdate(
@@ -336,7 +358,7 @@ export class ApartmentController {
   ) => {
     try {
       const { id } = req.params;
-      const { imageName } = req.body;
+      const { imageUrl } = req.body; // Changed from imageName to imageUrl
       const userId = req.user?._id;
 
       const apartment = await Apartment.findById(id).populate("owner");
@@ -354,9 +376,17 @@ export class ApartmentController {
         throw new ForbiddenError("You can only modify your own apartments");
       }
 
+      // Delete image from Cloudinary
+      try {
+        await FileUploadHelper.deleteFromCloudinary(imageUrl);
+      } catch (deleteError) {
+        console.error("Failed to delete image from Cloudinary:", deleteError);
+        // Continue even if deletion fails
+      }
+
       // Remove image from array
       apartment.images = apartment.images.filter(
-        (img: string) => img !== imageName
+        (img: string) => img !== imageUrl
       );
       await apartment.save();
 

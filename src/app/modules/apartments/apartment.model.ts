@@ -115,10 +115,6 @@ const apartmentSchema = new Schema<IApartment, ApartmentModel>(
         type: [String],
         default: [],
       },
-      notIncluded: {
-        type: [String],
-        default: [],
-      },
     },
     availability: {
       status: {

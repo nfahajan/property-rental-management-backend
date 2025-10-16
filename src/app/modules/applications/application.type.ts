@@ -17,18 +17,7 @@ export interface IApplication extends Document {
       | "retired";
     employerName?: string;
     employerPhone?: string;
-    emergencyContact: {
-      name: string;
-      phone: string;
-      relationship: string;
-    };
     additionalInfo?: string;
-  };
-  documents: {
-    idProof?: string; // File path
-    incomeProof?: string; // File path
-    bankStatement?: string; // File path
-    references?: string[]; // Array of file paths
   };
   status: "pending" | "under_review" | "approved" | "rejected" | "withdrawn";
   reviewNotes?: string;
@@ -57,11 +46,6 @@ export interface ICreateApplication {
       | "retired";
     employerName?: string;
     employerPhone?: string;
-    emergencyContact: {
-      name: string;
-      phone: string;
-      relationship: string;
-    };
     additionalInfo?: string;
   };
 }
@@ -79,21 +63,10 @@ export interface IUpdateApplication {
       | "retired";
     employerName?: string;
     employerPhone?: string;
-    emergencyContact?: {
-      name?: string;
-      phone?: string;
-      relationship?: string;
-    };
     additionalInfo?: string;
   };
   status?: "pending" | "under_review" | "approved" | "rejected" | "withdrawn";
   reviewNotes?: string;
-  documents?: {
-    idProof?: string;
-    incomeProof?: string;
-    bankStatement?: string;
-    references?: string[];
-  };
 }
 
 export interface IReviewApplication {

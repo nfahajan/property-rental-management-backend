@@ -2,35 +2,39 @@ import { OwnerController } from "./owner.controller";
 import auth from "../../middlewares/authentication";
 import hasRole from "../../middlewares/has-role";
 import expressPromiseRouter from "express-promise-router";
+import { FileUploadHelper } from "../../shared/cloudinaryHelper";
 
 const router = expressPromiseRouter();
 
-// Public routes (if needed)
-// router.post("/", OwnerController.createOwner); // Uncomment if owners can self-register
+// Public routes - self-registration
+router.post("/register", OwnerController.createOwner);
 
 // Protected routes - require authentication
 router.get("/profile", auth, OwnerController.getOwnerByUserId);
-router.put("/profile", auth, OwnerController.updateOwner);
 
-// Admin/Staff routes - require authentication and appropriate roles
-router.post("/", auth, hasRole("admin", "staff"), OwnerController.createOwner);
-router.get("/", auth, hasRole("admin", "staff"), OwnerController.getAllOwners);
-router.get(
-  "/stats",
+// Support both PUT and PATCH for profile updates (backward compatibility)
+router.put(
+  "/profile",
   auth,
-  hasRole("admin", "staff"),
-  OwnerController.getOwnerStats
+  FileUploadHelper.upload.single("profileImage"),
+  OwnerController.updateOwner
 );
-router.get(
-  "/:id",
+router.patch(
+  "/profile",
   auth,
-  hasRole("admin", "staff"),
-  OwnerController.getOwnerById
+  FileUploadHelper.upload.single("profileImage"),
+  OwnerController.updateOwner
 );
+
+// Admin routes - require authentication and appropriate roles
+router.post("/", auth, hasRole("admin"), OwnerController.createOwner);
+router.get("/", auth, hasRole("admin"), OwnerController.getAllOwners);
+router.get("/stats", auth, hasRole("admin"), OwnerController.getOwnerStats);
+router.get("/:id", auth, hasRole("admin"), OwnerController.getOwnerById);
 router.put(
   "/:id",
   auth,
-  hasRole("admin", "staff"),
+  hasRole("admin", "owner"),
   OwnerController.updateOwner
 );
 

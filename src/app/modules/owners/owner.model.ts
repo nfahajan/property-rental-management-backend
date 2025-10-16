@@ -26,56 +26,32 @@ const ownerSchema = new Schema<IOwner, OwnerModel>(
       required: [true, "Phone number is required"],
       trim: true,
     },
+    profileImage:{
+      type:String
+      
+    },
     address: {
       street: {
         type: String,
-        required: [true, "Street address is required"],
         trim: true,
       },
       city: {
         type: String,
-        required: [true, "City is required"],
         trim: true,
       },
       state: {
         type: String,
-        required: [true, "State is required"],
         trim: true,
       },
       zipCode: {
         type: String,
-        required: [true, "Zip code is required"],
         trim: true,
       },
       country: {
         type: String,
-        required: [true, "Country is required"],
         trim: true,
         default: "USA",
       },
-    },
-    businessInfo: {
-      businessName: {
-        type: String,
-        trim: true,
-      },
-      businessType: {
-        type: String,
-        trim: true,
-      },
-      taxId: {
-        type: String,
-        trim: true,
-      },
-      licenseNumber: {
-        type: String,
-        trim: true,
-      },
-    },
-    status: {
-      type: String,
-      enum: ["active", "inactive", "pending", "suspended"],
-      default: "active",
     },
     user: {
       type: Schema.Types.ObjectId,
@@ -100,11 +76,5 @@ ownerSchema.virtual("fullName").get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// Virtual for business name or full name
-ownerSchema.virtual("displayName").get(function () {
-  return (
-    this.businessInfo?.businessName || `${this.firstName} ${this.lastName}`
-  );
-});
 
 export const Owner = model<IOwner, OwnerModel>("Owner", ownerSchema);

@@ -28,7 +28,6 @@ export interface IApartment extends Document {
   };
   utilities: {
     included: string[];
-    notIncluded: string[];
   };
   availability: {
     status: "available" | "rented" | "maintenance" | "unavailable";
@@ -70,7 +69,6 @@ export interface ICreateApartment {
   };
   utilities: {
     included: string[];
-    notIncluded: string[];
   };
   availability: {
     status: "available" | "rented" | "maintenance" | "unavailable";
@@ -105,7 +103,6 @@ export interface IUpdateApartment {
   };
   utilities?: {
     included?: string[];
-    notIncluded?: string[];
   };
   availability?: {
     status?: "available" | "rented" | "maintenance" | "unavailable";

@@ -11,12 +11,6 @@ router.post(
   "/",
   auth,
   hasRole("tenant"),
-  handleFileData.fields([
-    { name: "idProof", maxCount: 1 },
-    { name: "incomeProof", maxCount: 1 },
-    { name: "bankStatement", maxCount: 1 },
-    { name: "references", maxCount: 5 },
-  ]),
   ApplicationController.createApplication
 );
 
@@ -31,12 +25,6 @@ router.put(
   "/:id",
   auth,
   hasRole("tenant"),
-  handleFileData.fields([
-    { name: "idProof", maxCount: 1 },
-    { name: "incomeProof", maxCount: 1 },
-    { name: "bankStatement", maxCount: 1 },
-    { name: "references", maxCount: 5 },
-  ]),
   ApplicationController.updateApplication
 );
 router.delete(
@@ -60,17 +48,17 @@ router.patch(
   ApplicationController.reviewApplication
 );
 
-// Admin/Staff routes - can manage all applications
+// Admin routes - can manage all applications
 router.get(
   "/",
   auth,
-  hasRole("admin", "staff"),
+  hasRole("admin"),
   ApplicationController.getAllApplications
 );
 router.patch(
   "/admin/:id/review",
   auth,
-  hasRole("admin", "staff"),
+  hasRole("admin"),
   ApplicationController.reviewApplication
 );
 router.delete(
@@ -82,7 +70,7 @@ router.delete(
 router.get(
   "/admin/stats",
   auth,
-  hasRole("admin", "staff"),
+  hasRole("admin"),
   ApplicationController.getApplicationStats
 );
 

@@ -6,6 +6,7 @@ import sendResponse from "../../shared/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import NotFoundError from "../../errors/not-found";
 import BadRequestError from "../../errors/bad-request";
+import { FileUploadHelper } from "../../shared/cloudinaryHelper";
 
 export class TenantController {
   // Create a new tenant and associated user
@@ -144,8 +145,60 @@ export class TenantController {
       const { id } = req.params;
       const updateData: IUpdateTenant = req.body;
 
+      // Handle profile image upload if file is provided
+      if (req.file) {
+        try {
+          // Get current tenant to check for existing profile image
+          let currentTenant;
+          if (id) {
+            currentTenant = await Tenant.findById(id);
+          } else {
+            currentTenant = await Tenant.findOne({ user: req.user?._id });
+          }
+
+          // Delete old profile image from Cloudinary if exists
+          if (currentTenant?.profileImage) {
+            try {
+              await FileUploadHelper.deleteFromCloudinary(
+                currentTenant.profileImage
+              );
+            } catch (deleteError) {
+              console.error("Failed to delete old profile image:", deleteError);
+              // Continue with upload even if deletion fails
+            }
+          }
+
+          // Upload new profile image
+          const imageUrl = await FileUploadHelper.uploadToCloudinary(
+            req.file,
+            "profile-images"
+          );
+          if (imageUrl) {
+            updateData.profileImage = imageUrl;
+          }
+        } catch (error) {
+          sendResponse(res, {
+            success: false,
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            message: "Failed to upload profile image",
+            data: null,
+          });
+          return;
+        }
+      }
+
+      // If no ID in params, get tenant by authenticated user ID (for profile update)
+      let tenantId = id;
+      if (!id) {
+        const tenant = await Tenant.findOne({ user: req.user?._id });
+        if (!tenant) {
+          throw new NotFoundError("Tenant profile not found");
+        }
+        tenantId = tenant._id;
+      }
+
       const tenant = await Tenant.findByIdAndUpdate(
-        id,
+        tenantId,
         { ...updateData },
         { new: true, runValidators: true }
       ).populate("user", "email roles status");
